@@ -1,0 +1,95 @@
+import { NavLink, Outlet, useNavigate } from 'react-router-dom';
+import {
+  BarChart3,
+  CalendarDays,
+  DatabaseBackup,
+  Flame,
+  Gauge,
+  ListChecks,
+  LineChart,
+  NotebookText,
+  Settings,
+  ShieldCheck,
+  Sparkles,
+  Timer,
+  Trophy,
+} from 'lucide-react';
+import { useLifeData } from '../hooks/useLifeData';
+import { XPBar } from './XPBar';
+
+const nav = [
+  { to: '/app', label: 'Dashboard', icon: Gauge, end: true },
+  { to: '/app/planner', label: 'Planner', icon: ListChecks },
+  { to: '/app/habits', label: 'Habits', icon: Flame },
+  { to: '/app/time', label: 'Time', icon: Timer },
+  { to: '/app/focus', label: 'Focus', icon: Sparkles },
+  { to: '/app/metrics', label: 'Metrics', icon: LineChart },
+  { to: '/app/calendar', label: 'Calendar', icon: CalendarDays },
+  { to: '/app/analytics', label: 'Analytics', icon: BarChart3 },
+  { to: '/app/achievements', label: 'Awards', icon: Trophy },
+  { to: '/app/reports', label: 'Reports', icon: NotebookText },
+  { to: '/app/backup', label: 'Backup', icon: DatabaseBackup },
+  { to: '/app/settings', label: 'Settings', icon: Settings },
+];
+
+export function AppShell() {
+  const data = useLifeData();
+  const navigate = useNavigate();
+  const profile = data?.profile;
+  const stats = data?.stats;
+
+  return (
+    <div className="app-shell">
+      <aside className="sidebar">
+        <button className="brand-block" onClick={() => navigate('/')} aria-label="Go to LifeXP landing page">
+          <span className="brand-mark">XP</span>
+          <span>
+            <strong>LifeXP</strong>
+            <small>Track your life. Level it up.</small>
+          </span>
+        </button>
+        <nav className="desktop-nav" aria-label="LifeXP navigation">
+          {nav.map((item) => (
+            <NavLink key={item.to} to={item.to} end={item.end} className={({ isActive }) => (isActive ? 'active' : '')}>
+              <item.icon size={18} />
+              <span>{item.label}</span>
+            </NavLink>
+          ))}
+        </nav>
+        <div className="sidebar-footer">
+          {stats ? <XPBar totalXP={stats.totalXP} /> : null}
+          <div className="privacy-chip">
+            <ShieldCheck size={16} />
+            <span>Local only</span>
+          </div>
+        </div>
+      </aside>
+
+      <div className="app-main">
+        <header className="topbar">
+          <div>
+            <p className="micro">Every tiny action counts.</p>
+            <h1>Welcome back{profile?.displayName ? `, ${profile.displayName}` : ''}</h1>
+          </div>
+          <div className="profile-pill">
+            <span>{profile?.avatar ?? '🧭'}</span>
+            <div>
+              <strong>{stats?.currentRank ?? 'Newcomer'}</strong>
+              <small>{stats?.coins ?? 0} coins</small>
+            </div>
+          </div>
+        </header>
+        <Outlet />
+      </div>
+
+      <nav className="mobile-nav" aria-label="Mobile navigation">
+        {nav.slice(0, 5).map((item) => (
+          <NavLink key={item.to} to={item.to} end={item.end} aria-label={item.label}>
+            <item.icon size={20} />
+            <span>{item.label}</span>
+          </NavLink>
+        ))}
+      </nav>
+    </div>
+  );
+}
