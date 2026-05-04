@@ -1,7 +1,7 @@
 import { Link } from 'react-router-dom';
 import { Bug, HelpCircle, Lightbulb, Map, MessageSquarePlus } from 'lucide-react';
 
-const issueBase = 'https://github.com/YOUR_USERNAME/lifexp/issues/new/choose';
+const issueBase = 'https://github.com/mbaffour/lifexp/issues/new/choose';
 
 export function Feedback() {
   return (
@@ -19,7 +19,7 @@ export function Feedback() {
         <a className="feedback-card" href={issueBase} target="_blank" rel="noreferrer"><Lightbulb /><h2>Request a feature</h2><p>Describe the life-tracking workflow you want LifeXP to support.</p></a>
         <a className="feedback-card" href={issueBase} target="_blank" rel="noreferrer"><HelpCircle /><h2>Ask a question</h2><p>Ask how something works or where a feature should live.</p></a>
         <a className="feedback-card" href={issueBase} target="_blank" rel="noreferrer"><Lightbulb /><h2>Suggest an improvement</h2><p>Share a UX, accessibility, dashboard, chart, or workflow refinement.</p></a>
-        <a className="feedback-card" href="https://github.com/YOUR_USERNAME/lifexp/issues" target="_blank" rel="noreferrer"><Map /><h2>View roadmap</h2><p>Browse known issues, future plans, and active discussion.</p></a>
+        <a className="feedback-card" href="https://github.com/mbaffour/lifexp/issues" target="_blank" rel="noreferrer"><Map /><h2>View roadmap</h2><p>Browse known issues, future plans, and active discussion.</p></a>
       </section>
       <section className="panel">
         <h2>Good issue reports include</h2>

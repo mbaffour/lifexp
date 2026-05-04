@@ -72,7 +72,7 @@ Then open the Vite URL shown in the terminal.
 LifeXP is designed to be hosted from GitHub Pages at:
 
 ```text
-https://YOUR_USERNAME.github.io/lifexp/
+https://mbaffour.github.io/lifexp/
 ```
 
 Once deployed, you can open that URL from any browser. The app shell is static and can be cached by the included service worker after the first visit. Your actual LifeXP data is still stored locally in each browser profile, so use Backup / Restore when moving between devices or browsers.
@@ -96,21 +96,14 @@ base: "/lifexp/"
 If your repo URL is:
 
 ```text
-https://github.com/YOUR_USERNAME/lifexp
+https://github.com/mbaffour/lifexp
 ```
 
 the deployed site will be:
 
 ```text
-https://YOUR_USERNAME.github.io/lifexp/
+https://mbaffour.github.io/lifexp/
 ```
-
-Replace `YOUR_USERNAME` in:
-
-- `package.json` homepage
-- `src/pages/Landing.tsx`
-- `src/pages/Feedback.tsx`
-- `.github/ISSUE_TEMPLATE/config.yml`
 
 If you rename the repo, update `vite.config.ts` to match:
 
@@ -172,7 +165,7 @@ The full backup includes:
 Use the Feedback page or open:
 
 ```text
-https://github.com/YOUR_USERNAME/lifexp/issues/new/choose
+https://github.com/mbaffour/lifexp/issues/new/choose
 ```
 
 Include:

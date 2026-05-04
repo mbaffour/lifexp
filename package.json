@@ -2,7 +2,7 @@
   "name": "lifexp",
   "private": true,
   "version": "1.1.0",
-  "homepage": "https://YOUR_USERNAME.github.io/lifexp/",
+  "homepage": "https://mbaffour.github.io/lifexp/",
   "type": "module",
   "scripts": {
     "dev": "vite",

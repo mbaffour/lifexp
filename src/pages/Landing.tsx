@@ -26,7 +26,7 @@ export function Landing() {
         <nav>
           <Link to="/guide">Guide</Link>
           <Link to="/feedback">Feedback</Link>
-          <a href="https://github.com/YOUR_USERNAME/lifexp" target="_blank" rel="noreferrer">GitHub</a>
+          <a href="https://github.com/mbaffour/lifexp" target="_blank" rel="noreferrer">GitHub</a>
         </nav>
       </header>
 
@@ -45,7 +45,7 @@ export function Landing() {
           <div className="hero-links">
             <Link to="/feedback">Report a Bug</Link>
             <Link to="/feedback">Request a Feature</Link>
-            <a href="https://github.com/YOUR_USERNAME/lifexp" target="_blank" rel="noreferrer">
+            <a href="https://github.com/mbaffour/lifexp" target="_blank" rel="noreferrer">
               <Code2 size={16} /> View on GitHub
             </a>
           </div>
