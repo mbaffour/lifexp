@@ -288,6 +288,93 @@ export async function addXP(amount: number, sourceType: string, sourceId: string
   });
 }
 
+export async function undoLastAction() {
+  const xp = (await db.xpTransactions.orderBy('createdAt').reverse().first()) ?? null;
+  if (!xp || xp.sourceType === 'demo_seed') return { undone: false, message: 'No reversible action found yet.' };
+  let timeMinutesToRemove = 0;
+
+  await db.transaction(
+    'rw',
+    [
+      db.userStats,
+      db.xpTransactions,
+      db.habitCompletions,
+      db.metricLogs,
+      db.timeEntries,
+      db.todoItems,
+      db.timetableBlocks,
+    ],
+    async () => {
+      if (xp.sourceType === 'habit') {
+        const completion = await db.habitCompletions
+          .where('habitId')
+          .equals(xp.sourceId)
+          .reverse()
+          .sortBy('createdAt')
+          .then((rows) => rows.find((row) => !row.skipped));
+        if (completion) await db.habitCompletions.delete(completion.id);
+      }
+
+      if (xp.sourceType === 'metric') {
+        const log = await db.metricLogs
+          .where('metricId')
+          .equals(xp.sourceId)
+          .reverse()
+          .sortBy('createdAt')
+          .then((rows) => rows[0]);
+        if (log) await db.metricLogs.delete(log.id);
+      }
+
+      if (xp.sourceType === 'time') {
+        const entry = await db.timeEntries.get(xp.sourceId);
+        if (entry) {
+          timeMinutesToRemove = entry.durationMinutes;
+          await db.timeEntries.delete(entry.id);
+        }
+      }
+
+      if (xp.sourceType === 'todo') {
+        const todo = await db.todoItems.get(xp.sourceId);
+        if (todo) {
+          await db.todoItems.update(todo.id, {
+            status: todo.completedChecklist.length ? 'inProgress' : 'open',
+            completedAt: undefined,
+            updatedAt: now(),
+          });
+        }
+      }
+
+      if (xp.sourceType === 'timetable') {
+        await db.timetableBlocks.update(xp.sourceId, {
+          status: 'planned',
+          completedAt: undefined,
+          actualMinutes: undefined,
+          updatedAt: now(),
+        });
+      }
+
+      await db.xpTransactions.delete(xp.id);
+
+      const stats = (await db.userStats.get('stats')) ?? makeStats();
+      const totalXP = Math.max(0, stats.totalXP - xp.amount);
+      const levelInfo = getLevelInfo(totalXP);
+      await db.userStats.put({
+        ...stats,
+        totalXP,
+        currentLevel: levelInfo.level,
+        currentRank: levelInfo.currentRank,
+        coins: Math.max(0, stats.coins - Math.max(0, Math.floor(xp.amount / 10))),
+        habitsCompleted: xp.sourceType === 'habit' ? Math.max(0, stats.habitsCompleted - 1) : stats.habitsCompleted,
+        metricsLogged: xp.sourceType === 'metric' ? Math.max(0, stats.metricsLogged - 1) : stats.metricsLogged,
+        timeMinutesTracked: xp.sourceType === 'time' ? Math.max(0, stats.timeMinutesTracked - timeMinutesToRemove) : stats.timeMinutesTracked,
+        updatedAt: now(),
+      });
+    },
+  );
+
+  return { undone: true, message: `Undid: ${xp.reason}` };
+}
+
 export async function updateStats(partial: Partial<UserStats>) {
   const stats = (await db.userStats.get('stats')) ?? makeStats();
   const levelInfo = getLevelInfo(stats.totalXP);

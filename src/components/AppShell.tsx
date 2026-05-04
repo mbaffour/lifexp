@@ -8,13 +8,16 @@ import {
   ListChecks,
   LineChart,
   NotebookText,
+  RotateCcw,
   Settings,
   ShieldCheck,
   Sparkles,
   Timer,
   Trophy,
 } from 'lucide-react';
+import { undoLastAction } from '../db/lifexpDb';
 import { useLifeData } from '../hooks/useLifeData';
+import { useToast } from './Toast';
 import { XPBar } from './XPBar';
 
 const nav = [
@@ -34,9 +37,15 @@ const nav = [
 
 export function AppShell() {
   const data = useLifeData();
+  const toast = useToast();
   const navigate = useNavigate();
   const profile = data?.profile;
   const stats = data?.stats;
+
+  const undo = async () => {
+    const result = await undoLastAction();
+    toast(result.message, result.undone ? 'info' : 'warning');
+  };
 
   return (
     <div className="app-shell">
@@ -71,12 +80,18 @@ export function AppShell() {
             <p className="micro">Every tiny action counts.</p>
             <h1>Welcome back{profile?.displayName ? `, ${profile.displayName}` : ''}</h1>
           </div>
+          <div className="topbar-actions">
+            <button className="btn small ghost" onClick={undo} title="Undo last tracked action">
+              <RotateCcw size={15} />
+              Undo
+            </button>
           <div className="profile-pill">
             <span>{profile?.avatar ?? '🧭'}</span>
             <div>
               <strong>{stats?.currentRank ?? 'Newcomer'}</strong>
               <small>{stats?.coins ?? 0} coins</small>
             </div>
+          </div>
           </div>
         </header>
         <Outlet />
