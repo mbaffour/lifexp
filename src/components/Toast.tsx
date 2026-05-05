@@ -4,17 +4,26 @@ import { AnimatePresence, motion } from 'framer-motion';
 import { CheckCircle2, Info, TriangleAlert } from 'lucide-react';
 
 type ToastType = 'success' | 'info' | 'warning';
-type Toast = { id: string; message: string; type: ToastType };
+type ToastAction = { label: string; onClick: () => void };
+type Toast = { id: string; message: string; type: ToastType; action?: ToastAction };
 
-const ToastContext = createContext<(message: string, type?: ToastType) => void>(() => undefined);
+type PushFn = (message: string, type?: ToastType, action?: ToastAction) => void;
+
+const ToastContext = createContext<PushFn>(() => undefined);
 
 export function ToastProvider({ children }: { children: ReactNode }) {
   const [toasts, setToasts] = useState<Toast[]>([]);
-  const push = useCallback((message: string, type: ToastType = 'success') => {
+
+  const push = useCallback<PushFn>((message, type = 'success', action) => {
     const id = crypto.randomUUID();
-    setToasts((current) => [...current, { id, message, type }]);
-    window.setTimeout(() => setToasts((current) => current.filter((toast) => toast.id !== id)), 3200);
+    setToasts((current) => [...current, { id, message, type, action }]);
+    window.setTimeout(() => setToasts((current) => current.filter((t) => t.id !== id)), 4000);
   }, []);
+
+  const dismiss = useCallback((id: string) => {
+    setToasts((current) => current.filter((t) => t.id !== id));
+  }, []);
+
   const value = useMemo(() => push, [push]);
 
   return (
@@ -28,12 +37,21 @@ export function ToastProvider({ children }: { children: ReactNode }) {
               <motion.div
                 className={`toast toast-${toast.type}`}
                 key={toast.id}
-                initial={{ opacity: 0, y: 18, scale: 0.98 }}
+                initial={{ opacity: 0, y: 18, scale: 0.96 }}
                 animate={{ opacity: 1, y: 0, scale: 1 }}
-                exit={{ opacity: 0, y: 8, scale: 0.98 }}
+                exit={{ opacity: 0, y: 8, scale: 0.96 }}
+                transition={{ type: 'spring', stiffness: 320, damping: 26 }}
               >
-                <Icon size={18} />
-                <span>{toast.message}</span>
+                <Icon size={17} />
+                <span style={{ flex: 1 }}>{toast.message}</span>
+                {toast.action ? (
+                  <button
+                    className="toast-action"
+                    onClick={() => { toast.action!.onClick(); dismiss(toast.id); }}
+                  >
+                    {toast.action.label}
+                  </button>
+                ) : null}
               </motion.div>
             );
           })}

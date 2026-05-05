@@ -1,4 +1,4 @@
-export type ThemeName = 'light' | 'dark' | 'neon' | 'forest' | 'ocean' | 'sunset' | 'minimal';
+export type ThemeName = 'light' | 'dark' | 'neon' | 'forest' | 'ocean' | 'sunset' | 'minimal' | 'night' | 'ambient' | 'day';
 export type WeekStart = 'sunday' | 'monday';
 export type Units = 'imperial' | 'metric';
 export type WeightUnit = 'lbs' | 'kg';

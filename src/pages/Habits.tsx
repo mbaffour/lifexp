@@ -1,6 +1,6 @@
 import { useState, type FormEvent } from 'react';
 import { Archive, Check, Flame, Pause, Plus, Search, Trash2 } from 'lucide-react';
-import { db, addXP, updateStats, uuid } from '../db/lifexpDb';
+import { db, addXP, updateStats, undoLastAction, uuid } from '../db/lifexpDb';
 import { useLifeData } from '../hooks/useLifeData';
 import { Icon } from '../components/Icon';
 import { useToast } from '../components/Toast';
@@ -75,7 +75,14 @@ export function Habits() {
       await addXP(xpEarned, 'habit', habitId, `Completed ${habit.name}`);
       await updateStats({ habitsCompleted: (data.stats?.habitsCompleted ?? 0) + 1 });
     }
-    toast(skipped ? `${habit.name} skipped.` : `${habit.name} complete. +${xpEarned} XP`);
+    if (skipped) {
+      toast(`${habit.name} skipped.`);
+    } else {
+      toast(`${habit.name} complete. +${xpEarned} XP`, 'success', {
+        label: 'Undo',
+        onClick: async () => { await undoLastAction(); },
+      });
+    }
   };
 
   const setStatus = async (habitId: string, status: HabitStatus) => {

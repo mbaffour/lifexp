@@ -2,7 +2,7 @@ import { Link } from 'react-router-dom';
 import { Area, AreaChart, Bar, BarChart, CartesianGrid, Cell, Pie, PieChart, ResponsiveContainer, Tooltip, XAxis, YAxis } from 'recharts';
 import { CalendarCheck, FileText, Flame, ListChecks, NotebookPen, Plus, Sparkles, Star, Timer, Trophy, Zap } from 'lucide-react';
 import { motion } from 'framer-motion';
-import { db, addXP, updateStats, uuid } from '../db/lifexpDb';
+import { db, addXP, updateStats, undoLastAction, uuid } from '../db/lifexpDb';
 import { useLifeData } from '../hooks/useLifeData';
 import { getLevelInfo } from '../utils/gamification';
 import { StatCard } from '../components/StatCard';
@@ -49,7 +49,10 @@ export function Dashboard() {
     });
     await addXP(habit.xpReward, 'habit', habitId, `Completed ${habit.name}`);
     await updateStats({ habitsCompleted: (data.stats?.habitsCompleted ?? 0) + 1 });
-    toast(`+${habit.xpReward} XP — ${habit.name} complete!`);
+    toast(`+${habit.xpReward} XP — ${habit.name} complete!`, 'success', {
+      label: 'Undo',
+      onClick: async () => { await undoLastAction(); },
+    });
   };
 
   const quickLogMetric = async () => {
@@ -68,7 +71,10 @@ export function Dashboard() {
     });
     await addXP(8, 'metric', metric.id, `Logged ${metric.name}`);
     await updateStats({ metricsLogged: (data.stats?.metricsLogged ?? 0) + 1 });
-    toast(`${metric.name} logged. +8 XP`);
+    toast(`${metric.name} logged. +8 XP`, 'success', {
+      label: 'Undo',
+      onClick: async () => { await undoLastAction(); },
+    });
   };
 
   const dailyQuest = data.quests.find((q) => q.type === 'daily');
