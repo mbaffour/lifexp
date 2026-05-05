@@ -17,6 +17,7 @@ import {
 } from 'lucide-react';
 import { undoLastAction } from '../db/lifexpDb';
 import { useLifeData } from '../hooks/useLifeData';
+import { getLevelInfo } from '../utils/gamification';
 import { useToast } from './Toast';
 import { XPBar } from './XPBar';
 
@@ -41,6 +42,7 @@ export function AppShell() {
   const navigate = useNavigate();
   const profile = data?.profile;
   const stats = data?.stats;
+  const levelInfo = stats ? getLevelInfo(stats.totalXP) : null;
 
   const undo = async () => {
     const result = await undoLastAction();
@@ -57,19 +59,29 @@ export function AppShell() {
             <small>Track your life. Level it up.</small>
           </span>
         </button>
+
         <nav className="desktop-nav" aria-label="LifeXP navigation">
           {nav.map((item) => (
             <NavLink key={item.to} to={item.to} end={item.end} className={({ isActive }) => (isActive ? 'active' : '')}>
-              <item.icon size={18} />
+              <item.icon size={17} />
               <span>{item.label}</span>
             </NavLink>
           ))}
         </nav>
+
         <div className="sidebar-footer">
           {stats ? <XPBar totalXP={stats.totalXP} /> : null}
-          <div className="privacy-chip">
-            <ShieldCheck size={16} />
-            <span>Local only</span>
+          <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: '.5rem' }}>
+            <div className="privacy-chip">
+              <ShieldCheck size={15} />
+              <span>Local only</span>
+            </div>
+            {stats && stats.currentStreak > 0 ? (
+              <div className="privacy-chip" style={{ color: '#f97316' }} title={`${stats.currentStreak}-day streak`}>
+                <Flame size={15} />
+                <span>{stats.currentStreak}d</span>
+              </div>
+            ) : null}
           </div>
         </div>
       </aside>
@@ -82,16 +94,23 @@ export function AppShell() {
           </div>
           <div className="topbar-actions">
             <button className="btn small ghost" onClick={undo} title="Undo last tracked action">
-              <RotateCcw size={15} />
+              <RotateCcw size={14} />
               Undo
             </button>
-          <div className="profile-pill">
-            <span>{profile?.avatar ?? '🧭'}</span>
-            <div>
-              <strong>{stats?.currentRank ?? 'Newcomer'}</strong>
-              <small>{stats?.coins ?? 0} coins</small>
+            <div className="profile-pill">
+              <span>{profile?.avatar ?? '🧭'}</span>
+              <div>
+                <strong style={{ display: 'flex', alignItems: 'center', gap: '.35rem' }}>
+                  {levelInfo ? (
+                    <span className="level-badge small" title={`Level ${levelInfo.level}`}>
+                      {levelInfo.level}
+                    </span>
+                  ) : null}
+                  {stats?.currentRank ?? 'Newcomer'}
+                </strong>
+                <small>{stats?.coins ?? 0} coins · {stats?.gems ?? 0} gems</small>
+              </div>
             </div>
-          </div>
           </div>
         </header>
         <Outlet />
@@ -100,7 +119,7 @@ export function AppShell() {
       <nav className="mobile-nav" aria-label="Mobile navigation">
         {nav.slice(0, 5).map((item) => (
           <NavLink key={item.to} to={item.to} end={item.end} aria-label={item.label}>
-            <item.icon size={20} />
+            <item.icon size={19} />
             <span>{item.label}</span>
           </NavLink>
         ))}

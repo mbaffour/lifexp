@@ -1,6 +1,8 @@
 import { motion } from 'framer-motion';
 import { Icon } from './Icon';
 
+type Tone = 'violet' | 'emerald' | 'cyan' | 'coral' | 'gold' | 'slate';
+
 export function StatCard({
   title,
   value,
@@ -12,10 +14,14 @@ export function StatCard({
   value: string | number;
   detail?: string;
   icon: string;
-  tone?: 'violet' | 'emerald' | 'cyan' | 'coral' | 'gold' | 'slate';
+  tone?: Tone;
 }) {
   return (
-    <motion.article className={`stat-card tone-${tone}`} whileHover={{ y: -3 }} transition={{ type: 'spring', stiffness: 260, damping: 22 }}>
+    <motion.article
+      className={`stat-card tone-${tone}`}
+      whileHover={{ y: -4, scale: 1.01 }}
+      transition={{ type: 'spring', stiffness: 280, damping: 22 }}
+    >
       <div className="stat-icon">
         <Icon name={icon} size={20} />
       </div>
