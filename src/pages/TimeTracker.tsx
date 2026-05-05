@@ -66,7 +66,7 @@ export function TimeTracker() {
 
   const saveEntry = async (entry: { title: string; categoryId: string; startTime: string; endTime: string; durationMinutes: number; mode: TimerMode; tags: string[]; notes: string }) => {
     const overlaps = data.timeEntries.some((existing) => new Date(entry.startTime) < new Date(existing.endTime) && new Date(entry.endTime) > new Date(existing.startTime));
-    if (overlaps && !window.confirm('This overlaps an existing time entry. Save anyway?')) return;
+    if (overlaps) toast('Heads up: this overlaps an existing entry.', 'warning');
     const id = uuid('time_');
     await db.timeEntries.add({
       id,
@@ -136,7 +136,17 @@ export function TimeTracker() {
               </div>
               <div className="row-actions">
                 <button className="icon-btn" onClick={() => duplicate(entry.id)} title="Duplicate"><Copy size={17} /></button>
-                <button className="icon-btn danger" onClick={() => window.confirm('Delete this time entry?') && db.timeEntries.delete(entry.id).then(() => toast('Time entry deleted.'))} title="Delete"><Trash2 size={17} /></button>
+                <button
+                  className="icon-btn danger"
+                  title="Delete"
+                  onClick={async () => {
+                    await db.timeEntries.delete(entry.id);
+                    toast('Time entry deleted.', 'info', {
+                      label: 'Undo',
+                      onClick: async () => { await db.timeEntries.add(entry); },
+                    });
+                  }}
+                ><Trash2 size={17} /></button>
               </div>
             </article>
           ))}

@@ -62,7 +62,7 @@ export function Planner() {
     event.preventDefault();
     if (!todoForm.title.trim()) return toast('Give the task a title first.', 'warning');
     const duplicate = openTodos.some((todo) => todo.title.toLowerCase() === todoForm.title.trim().toLowerCase());
-    if (duplicate && !window.confirm('You already have an open task with this title. Create another anyway?')) return;
+    if (duplicate) toast('Note: a task with this name already exists.', 'warning');
     const xpReward = priorityXp[todoForm.priority];
     await db.todoItems.add({
       id: uuid('todo_'),
@@ -95,7 +95,7 @@ export function Planner() {
       toMinutes(blockForm.startTime) < toMinutes(block.endTime) &&
       toMinutes(blockForm.endTime) > toMinutes(block.startTime),
     );
-    if (overlaps && !window.confirm('This overlaps another planned block. Add it anyway?')) return;
+    if (overlaps) toast('Note: this overlaps another planned block.', 'warning');
     const duration = toMinutes(blockForm.endTime) - toMinutes(blockForm.startTime);
     await db.timetableBlocks.add({
       id: uuid('block_'),
@@ -256,7 +256,17 @@ export function Planner() {
                     </div>
                   ) : null}
                 </div>
-                <button className="icon-btn danger" onClick={() => window.confirm('Delete this to-do?') && db.todoItems.delete(todo.id).then(() => toast('To-do deleted.'))} title="Delete to-do"><Trash2 size={17} /></button>
+                <button
+                  className="icon-btn danger"
+                  title="Delete to-do"
+                  onClick={async () => {
+                    await db.todoItems.delete(todo.id);
+                    toast('To-do deleted.', 'info', {
+                      label: 'Undo',
+                      onClick: async () => { await db.todoItems.add(todo); },
+                    });
+                  }}
+                ><Trash2 size={17} /></button>
               </article>
             );
           })}
@@ -282,7 +292,17 @@ export function Planner() {
                 <div className="row-actions">
                   <button className="icon-btn" onClick={() => finishBlock(block, 'completed')} title="Complete block"><CheckCircle2 size={17} /></button>
                   <button className="icon-btn" onClick={() => finishBlock(block, 'skipped')} title="Skip block"><SkipForward size={17} /></button>
-                  <button className="icon-btn danger" onClick={() => window.confirm('Delete this timetable block?') && db.timetableBlocks.delete(block.id).then(() => toast('Block deleted.'))} title="Delete block"><Trash2 size={17} /></button>
+                  <button
+                    className="icon-btn danger"
+                    title="Delete block"
+                    onClick={async () => {
+                      await db.timetableBlocks.delete(block.id);
+                      toast('Block deleted.', 'info', {
+                        label: 'Undo',
+                        onClick: async () => { await db.timetableBlocks.add(block); },
+                      });
+                    }}
+                  ><Trash2 size={17} /></button>
                 </div>
               </article>
             );

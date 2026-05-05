@@ -85,6 +85,21 @@ export function Habits() {
     }
   };
 
+  const deleteHabit = async (habit: typeof data.habits[number]) => {
+    const completions = await db.habitCompletions.where('habitId').equals(habit.id).toArray();
+    await Promise.all([
+      db.habits.delete(habit.id),
+      db.habitCompletions.where('habitId').equals(habit.id).delete(),
+    ]);
+    toast('Habit deleted.', 'info', {
+      label: 'Undo',
+      onClick: async () => {
+        await db.habits.add(habit);
+        if (completions.length) await db.habitCompletions.bulkAdd(completions);
+      },
+    });
+  };
+
   const setStatus = async (habitId: string, status: HabitStatus) => {
     await db.habits.update(habitId, { status, updatedAt: new Date().toISOString() });
     toast(status === 'archived' ? 'Habit archived.' : 'Habit updated.');
@@ -132,7 +147,7 @@ export function Habits() {
                   <button className="icon-btn" title="Skip without breaking streak" onClick={() => completeHabit(habit.id, 0, true)}>Skip</button>
                   <button className="icon-btn" title="Pause" onClick={() => setStatus(habit.id, habit.status === 'paused' ? 'active' : 'paused')}><Pause size={17} /></button>
                   <button className="icon-btn" title="Archive" onClick={() => setStatus(habit.id, 'archived')}><Archive size={17} /></button>
-                  <button className="icon-btn danger" title="Delete" onClick={() => window.confirm('Delete this habit and its history?') && Promise.all([db.habits.delete(habit.id), db.habitCompletions.where('habitId').equals(habit.id).delete()]).then(() => toast('Habit deleted.'))}><Trash2 size={17} /></button>
+                  <button className="icon-btn danger" title="Delete" onClick={() => deleteHabit(habit)}><Trash2 size={17} /></button>
                 </div>
               </article>
             );

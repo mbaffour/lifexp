@@ -153,7 +153,16 @@ export function LifeMetrics() {
               <article key={log.id} className="card-row">
                 <span className="color-dot" style={{ background: metric?.color }} />
                 <div><strong>{metric?.name}</strong><small>{String(log.value)} {metric?.unit} · {log.note || 'No note'}</small></div>
-                <button className="icon-btn danger" onClick={() => db.metricLogs.delete(log.id).then(() => toast('Metric log deleted.'))}><Trash2 size={17} /></button>
+                <button
+                  className="icon-btn danger"
+                  onClick={async () => {
+                    await db.metricLogs.delete(log.id);
+                    toast('Metric log deleted.', 'info', {
+                      label: 'Undo',
+                      onClick: async () => { await db.metricLogs.add(log); },
+                    });
+                  }}
+                ><Trash2 size={17} /></button>
               </article>
             );
           })}
