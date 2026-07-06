@@ -450,10 +450,58 @@ export async function exportAllData(): Promise<BackupPayload> {
   };
 }
 
-export async function importBackup(payload: BackupPayload, mode: 'merge' | 'replace') {
-  if (!payload || !payload.schemaVersion || payload.schemaVersion > SCHEMA_VERSION) {
-    throw new Error('Unsupported or invalid LifeXP backup file.');
+// Array-valued fields a valid backup payload must expose (all others get seeded on import).
+const BACKUP_ARRAY_FIELDS = [
+  'habits',
+  'habitCompletions',
+  'timeEntries',
+  'categories',
+  'metricDefinitions',
+  'metricLogs',
+  'routines',
+  'routineLogs',
+  'achievements',
+  'xpTransactions',
+  'quests',
+  'todoItems',
+  'timetableBlocks',
+  'settings',
+  'userProfile',
+  'userStats',
+  'reports',
+] as const satisfies readonly (keyof BackupPayload)[];
+
+/**
+ * Validate the basic shape and schema version of an imported backup BEFORE writing
+ * anything to Dexie, so an incompatible or corrupt file is rejected with a clear
+ * message instead of partially clobbering local data. Throws on failure; returns the
+ * value narrowed to BackupPayload on success.
+ */
+export function validateBackupPayload(payload: unknown): BackupPayload {
+  if (!payload || typeof payload !== 'object' || Array.isArray(payload)) {
+    throw new Error('That file is not a valid LifeXP backup (expected a JSON object).');
   }
+  const candidate = payload as Record<string, unknown>;
+  const { schemaVersion } = candidate;
+  if (typeof schemaVersion !== 'number' || !Number.isFinite(schemaVersion) || schemaVersion < 1) {
+    throw new Error('That file is missing a valid LifeXP schemaVersion and cannot be imported.');
+  }
+  if (schemaVersion > SCHEMA_VERSION) {
+    throw new Error(
+      `This backup was made with a newer LifeXP (schema v${schemaVersion}). Update the app before importing.`,
+    );
+  }
+  const badField = BACKUP_ARRAY_FIELDS.find(
+    (field) => field in candidate && !Array.isArray(candidate[field]),
+  );
+  if (badField) {
+    throw new Error(`This backup is corrupt: "${badField}" is not a list of records.`);
+  }
+  return candidate as unknown as BackupPayload;
+}
+
+export async function importBackup(payload: BackupPayload, mode: 'merge' | 'replace') {
+  validateBackupPayload(payload);
 
   const tables = [
     db.habits,

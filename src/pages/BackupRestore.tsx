@@ -1,8 +1,8 @@
 import { useState } from 'react';
 import { Download, FileSpreadsheet, Trash2, Upload } from 'lucide-react';
-import { db, exportAllData, importBackup } from '../db/lifexpDb';
+import { db, exportAllData, importBackup, validateBackupPayload } from '../db/lifexpDb';
 import { useLifeData } from '../hooks/useLifeData';
-import { backupSummary, downloadBlob, toCsv } from '../utils/export';
+import { backupSummary, downloadBlob, habitHistoryCsv, toCsv } from '../utils/export';
 import { useToast } from '../components/Toast';
 import type { BackupPayload } from '../types';
 
@@ -23,13 +23,22 @@ export function BackupRestore() {
 
   const importFile = async (file?: File) => {
     if (!file) return;
+    let parsed: unknown;
     try {
-      const parsed = JSON.parse(await file.text()) as BackupPayload;
-      setPreview(backupSummary(parsed));
-      setPayload(parsed);
-      toast('Import preview ready.', 'info');
+      parsed = JSON.parse(await file.text());
     } catch {
       toast('That file is not a valid LifeXP JSON backup.', 'warning');
+      return;
+    }
+    try {
+      const valid = validateBackupPayload(parsed);
+      setPreview(backupSummary(valid));
+      setPayload(valid);
+      toast('Import preview ready.', 'info');
+    } catch (error) {
+      setPreview(null);
+      setPayload(null);
+      toast(error instanceof Error ? error.message : 'That backup could not be imported.', 'warning');
     }
   };
 
@@ -49,6 +58,14 @@ export function BackupRestore() {
     if (!Array.isArray(rows)) return;
     downloadBlob(`lifexp-${name}.csv`, toCsv(rows as unknown as Record<string, unknown>[]), 'text/csv');
     toast(`${name} CSV exported.`);
+  };
+
+  const exportHabitHistory = async () => {
+    const backup = await exportAllData();
+    const csv = habitHistoryCsv(backup.habitCompletions, backup.habits, backup.categories);
+    if (!csv) return toast('No habit history to export yet.', 'info');
+    downloadBlob(`lifexp-habit-history-${backup.exportedAt.slice(0, 10)}.csv`, csv, 'text/csv');
+    toast('Habit history CSV exported.');
   };
 
   const clearAll = async () => {
@@ -88,6 +105,10 @@ export function BackupRestore() {
 
       <section className="panel">
         <div className="panel-title"><div><h3>CSV exports</h3><p>Open your records in spreadsheets.</p></div></div>
+        <div className="backup-hero">
+          <div><strong>Habit history</strong><span>Readable log with habit &amp; category names</span></div>
+          <button className="btn primary" onClick={exportHabitHistory}><Download size={16} /> Export habit history CSV</button>
+        </div>
         <div className="action-grid">
           {['habits', 'habitCompletions', 'timeEntries', 'todoItems', 'timetableBlocks', 'metricDefinitions', 'metricLogs', 'achievements', 'reports'].map((name) => (
             <button key={name} className="quick-action" onClick={() => exportCsv(name as keyof BackupPayload)}><FileSpreadsheet /> {name}</button>
